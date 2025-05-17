@@ -4,11 +4,12 @@ dotenv.config();
 import { connectDB } from "./config/db.js";
 import productRoutes from "./routes/product.route.js";
 const app = exress();
+const port = process.env.PORT || 5000;
 
 app.use(exress.json());
 app.use("/api/products", productRoutes);
 
-app.listen(5000, () => {
+app.listen(port, () => {
   connectDB();
-  console.log("Server start at port 5000");
+  console.log(`server is started successfuly at port ${port}`);
 });
