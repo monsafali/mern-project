@@ -19,6 +19,7 @@ function CreatePage() {
   });
 
   const { createProduct } = useProductStore();
+
   const toast = useToast();
   const handleAddProduct = async () => {
     console.log(newProduct);

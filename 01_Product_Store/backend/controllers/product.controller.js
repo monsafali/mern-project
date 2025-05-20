@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import mongoose from "mongoose";
 
 export const getProduct = async (req, res) => {
   try {
@@ -21,7 +22,13 @@ export const createProduct = async (req, res) => {
 
   try {
     await newProduct.save();
-    res.status(201).json({ success: true, message: "Data saved successfuly" });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: "Data saved successfuly",
+        data: newProduct,
+      });
   } catch (error) {
     console.error("Error in create product", error.message);
     res.status(500).json({ success: false, message: "Server error " });
@@ -31,6 +38,19 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   let { id } = req.params;
   let product = req.body;
+
+  try {
+    const updateProduct = await Product.findByIdAndUpdate(id, product, {
+      new: true,
+    });
+    res.status(200).json({
+      success: true,
+      message: "Product update successfuly",
+      data: updateProduct,
+    }); // <-- Add data
+  } catch (error) {
+    res.status(404).json({ success: false, message: "Server error" });
+  }
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
