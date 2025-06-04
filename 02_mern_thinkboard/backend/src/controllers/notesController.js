@@ -2,7 +2,7 @@ import Note from "../models/Note.js";
 
 export async function getAllNotes(req, res) {
   try {
-    const notes = await Note.find();
+    const notes = await Note.find().sort({ createdAt: -1 });
     res
       .status(200)
       .json({ success: true, message: "Get all notes", notes: notes });
@@ -14,8 +14,8 @@ export async function getAllNotes(req, res) {
 export async function createNote(req, res) {
   try {
     const { title, content } = req.body;
-    const notes = new Note({ title, content });
-    const savednotes = await notes.save();
+    const note = new Note({ title, content });
+    const savednotes = await note.save();
     res.status(200).json({
       success: true,
       message: "notes created successfuly",
