@@ -12,13 +12,12 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json()); // this middleware will parse JSON bodies: req.body
 
-app.use(rateLimiter);
-
 app.use(
   cors({
     origin: "http://localhost:5173",
   })
 );
+app.use(rateLimiter);
 
 app.use("/api/notes", notesRoutes);
 connectDB().then(() => {
