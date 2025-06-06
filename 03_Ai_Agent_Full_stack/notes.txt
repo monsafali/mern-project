@@ -1,0 +1,3 @@
+https://agentkit.inngest.com/getting-started/quick-start
+
+npm i inngest
