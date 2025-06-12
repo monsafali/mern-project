@@ -115,3 +115,67 @@ export async function logout(req, res) {
   res.clearCookie("jwt");
   res.status(200).json({ message: "Logout successful" });
 }
+
+export async function onboard(req, res) {
+  try {
+    const userId = req.user._id;
+    const { Fullname, bio, nativeLanguage, learningLanguage, location } =
+      req.body;
+    if (
+      !Fullname ||
+      !bio ||
+      !nativeLanguage ||
+      !learningLanguage ||
+      !location
+    ) {
+      return res.status(400).json({
+        message: "All fields are required",
+        missingfileds: [
+          !Fullname && "Fullname",
+          !bio && "bio",
+          !nativeLanguage && "nativeLanguage",
+          !learningLanguage && "learningLanguage",
+          !location && "location",
+        ].filter(Boolean),
+      });
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        ...req.body,
+        isOnboarded: true,
+      },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // update in upsert stream
+    try {
+      await upsertStreamUser({
+        id: updatedUser._id.toString(),
+        name: updatedUser.Fullname,
+        image: updatedUser.profilePic || "",
+      });
+    } catch (error) {
+      console.log("Upsert user error", error);
+    }
+    try {
+      await upsertStreamUser({
+        id: updatedUser._id,
+        name: updatedUser.Fullname,
+        image: updatedUser.profilePic || "",
+      });
+      console.log(`stream user updated for ${updatedUser.Fullname}`);
+    } catch (error) {
+      console.log("Upsert user error", error);
+    }
+    res
+      .status(200)
+      .json({ user: updatedUser, message: "Onboarding successful" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
