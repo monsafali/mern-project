@@ -1,5 +1,7 @@
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import { upsertStreamUser } from "../config/stream.js";
 
 export async function signup(req, res) {
   const { email, password, Fullname } = req.body;
@@ -27,12 +29,28 @@ export async function signup(req, res) {
     }
     const idx = Math.floor(Math.random() * 100) + 1;
     const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+
+    const hashedpassword = await bcrypt.hash(String(password), 10);
+
     const newuser = await User.create({
       email,
-      password,
+      password: hashedpassword,
       Fullname,
       profilePic: randomAvatar,
     });
+    //save data to the upsert stream
+
+    try {
+      await upsertStreamUser({
+        id: newuser._id,
+        name: newuser.Fullname,
+        image: newuser.profilePic || "",
+      });
+      console.log(`stream user created for ${newuser.Fullname}`);
+    } catch (error) {
+      console.log("Upsert user error", error);
+    }
+
     const token = jwt.sign({ userId: newuser._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
@@ -54,9 +72,46 @@ export async function signup(req, res) {
   }
 }
 
-export function login(req, res) {
-  res.send("login ");
+// pre save
+
+export async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Invalid email or password" });
+    }
+
+    const comparepassword = await bcrypt.compare(
+      String(password),
+      user.password
+    );
+
+    if (!comparepassword) {
+      return res.status(404).json({ message: "Invalid email or password" });
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+    res.cookie("jwt", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+    });
+    res.status(200).json({ user, message: "Login successful" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 }
-export function logout(req, res) {
-  res.send("logout ");
+
+export async function logout(req, res) {
+  res.clearCookie("jwt");
+  res.status(200).json({ message: "Logout successful" });
 }
