@@ -1,11 +1,13 @@
 import express from "express";
 import authRoutes from "./routes/auth.route.js";
 import dotenv from "dotenv";
-import { conntectDb } from "./config/db.js";
 dotenv.config();
+import { conntectDb } from "./config/db.js";
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 
