@@ -6,11 +6,10 @@ export const getUserSiderBar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
 
+    // This filter  filere all users. excpet currently logged in user from database
     const filteredUsers = await User.find({
       _id: { $ne: loggedInUserId },
     }).select("-password");
-
-    // This filter all used excpet currently logged in user from database
 
     res.status(200).json(filteredUsers);
   } catch (error) {
