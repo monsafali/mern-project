@@ -1,5 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
 import jwt from "jsonwebtoken";
 
 export const generateToken = (userId, res) => {
@@ -7,11 +5,12 @@ export const generateToken = (userId, res) => {
     expiresIn: "7d",
   });
 
-  res.cookie("jwt_token", token, {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    semeSite: "strict",
+  res.cookie("jwt", token, {
+    maxAge: 7 * 24 * 60 * 60 * 1000, // MS
+    httpOnly: true, // prevent XSS attacks cross-site scripting attacks
+    sameSite: "strict", // CSRF attacks cross-site request forgery attacks
     secure: process.env.NODE_ENV !== "development",
   });
+
   return token;
 };
