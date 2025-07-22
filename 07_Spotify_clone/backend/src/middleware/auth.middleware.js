@@ -18,5 +18,10 @@ export const requiredAdmin = async (req, res, next) => {
         .json({ message: "Unaturoed you must be and admin" });
     }
     next();
-  } catch (error) {}
+  } catch (error) {
+    console.log("Error in requiredAdmin middleware", error);
+    return res
+      .status(500)
+      .json({ message: "Server Error somethign went wrong" });
+  }
 };
