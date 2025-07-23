@@ -20,10 +20,11 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(clerkMiddleware());
+
 app.use(
   fileupload({
     useTempFiles: true,
-    tempFileDir: path.json(__dirname, "tmp"),
+    tempFileDir: path.join(__dirname, "tmp"),
     createParentPath: true,
     limits: {
       fileSize: 100 * 1024 * 1024, //10 mb max file size
@@ -37,6 +38,19 @@ app.use("/api/auth", authRoutes);
 app.use("/api/songs", songRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/stats", statRoutes);
+
+// Error Handler Milldwar
+
+app.use((err, req, res, next) => {
+  res
+    .status(500)
+    .join({
+      message:
+        process.env.NODE_ENV === "production"
+          ? "Internal Serverr error"
+          : err.message,
+    });
+});
 
 app.listen(PORT, () => {
   connectDB();
